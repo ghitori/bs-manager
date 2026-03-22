@@ -12,6 +12,7 @@ import { useThemeColor } from "renderer/hooks/use-theme-color.hook";
 import { ChevronTopIcon } from "renderer/components/svgs/icons/chevron-top-icon.component";
 import Tippy from "@tippyjs/react";
 import { LaunchMod } from "shared/models/bs-launch/launch-option.interface";
+import { BsStore } from "shared/models/bs-store.enum";
 
 export const CreateLaunchShortcutModal: ModalComponent<{ steamShortcut: boolean, launchOption: LaunchOption }, BSVersion> = ({resolver, options: {data}}) => {
 
@@ -51,7 +52,7 @@ export const CreateLaunchShortcutModal: ModalComponent<{ steamShortcut: boolean,
             </div>
             <h2 className="font-bold">{t("modals.create-launch-shortcut.launch-options")}</h2>
             <div className="mb-1 grid grid-flow-col gap-3 w-full rounded-md py-2 bg-light-main-color-1 dark:bg-main-color-1">
-                {data.oculus !== true && (
+                {data.oculus !== true && data.metadata?.store !== BsStore.OCULUS && (
                     <div className="h-full flex justify-center items-center gap-2">
                         <BsmCheckbox className="h-5 aspect-square relative z-[1]" checked={launchOption.launchMods.includes("oculus")} onChange={e => toogleLaunchMod("oculus", e)} />
                         <Tippy className="!bg-main-color-1" content={t("pages.version-viewer.launch-mods.oculus-description")} delay={[300, 0]} arrow={false}>
