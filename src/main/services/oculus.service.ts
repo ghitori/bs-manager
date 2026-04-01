@@ -9,6 +9,8 @@ import { sToMs } from "../../shared/helpers/time.helpers";
 import { execOnOs } from "../helpers/env.helpers";
 import { UtilsService } from "./utils.service";
 import { exec } from "child_process";
+import { CustomError } from "shared/models/exceptions/custom-error.class";
+import { BSLaunchError } from "shared/models/bs-launch";
 
 const { list } = (execOnOs({ win32: () => require("regedit-rs") }, true) ?? {}) as typeof import("regedit-rs");
 
@@ -113,8 +115,28 @@ export class OculusService {
         return isProcessRunning("Client"); // new name of oculus client
     }
 
+    public async isOculusInstalled(): Promise<boolean> {
+        if (process.platform !== "win32") {
+            log.info("Oculus installation check is not supported on non-windows platforms");
+            return true;
+        }
+
+        const oculusSchemeRegKey = "HKCU\\SOFTWARE\\Classes\\oculus";
+        const schemeRegData = await list(oculusSchemeRegKey).then(data => data[oculusSchemeRegKey]);
+
+        if (!Object.keys(schemeRegData.values).length) {
+            log.error("Registry key \"HKCU\\SOFTWARE\\Classes\\oculus\" not found");
+            return false;
+        }
+        return true
+    }
+
     public async startOculus(): Promise<void>{
         if(await this.oculusRunning()){ return; }
+
+        if (!await this.isOculusInstalled()){
+            throw new CustomError("No scheme found. Check if Oculus is installed.", BSLaunchError.OCULUS_NOT_INSTALLED);
+        }
 
         await shell.openPath("oculus://view/homepage");
 
