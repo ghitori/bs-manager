@@ -5,6 +5,7 @@ export const LaunchMods = {
     FPFC: "fpfc",
     DEBUG: "debug",
     SKIP_STEAM: "skip_steam",
+    SKIP_OCULUS_CLIENT: "skip_oculus_client",
     EDITOR: "editor",
     PROTON_LOGS: "proton_logs",
 } as const;

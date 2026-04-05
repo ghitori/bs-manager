@@ -224,6 +224,16 @@ export function LaunchSlide({ version }: Props) {
                 onPinChange: (pinned) => togglePinnedLaunchMod(pinned, LaunchMods.SKIP_STEAM),
             },
             {
+                id: LaunchMods.SKIP_OCULUS_CLIENT,
+                label: t("pages.version-viewer.launch-mods.skipoculusclient"),
+                description: t("pages.version-viewer.launch-mods.skipoculusclient-description"),
+                active: activeLaunchMods.includes(LaunchMods.SKIP_OCULUS_CLIENT),
+                visible: (version.metadata?.store === BsStore.OCULUS),
+                pinned: pinnedLaunchMods.includes(LaunchMods.SKIP_OCULUS_CLIENT),
+                onChange: (checked) => toggleActiveLaunchMod(checked, LaunchMods.SKIP_OCULUS_CLIENT),
+                onPinChange: (pinned) => togglePinnedLaunchMod(pinned, LaunchMods.SKIP_OCULUS_CLIENT),
+            },
+            {
                 id: LaunchMods.EDITOR,
                 icon: EditIcon,
                 label: t("pages.version-viewer.launch-mods.map-editor"),
@@ -298,7 +308,16 @@ export function LaunchSlide({ version }: Props) {
             </div>
             <div className="mt-4 flex flex-col items-center justify-center gap-3">
                 <div className="relative">
-                    <GlowEffect className="!rounded-full" visible={!!((activeLaunchMods?.filter(mod => !pinnedLaunchMods.includes(mod)))?.length || command)}/>
+                    <GlowEffect className="!rounded-full" visible={
+                        !!command ||
+                        activeLaunchMods?.some(
+                            mod => 
+                                !(version.metadata?.store === BsStore.OCULUS && mod === "oculus") && 
+                                !(version.metadata?.store !== BsStore.OCULUS && mod === "skip_oculus_client") && 
+                                !(safeLt(version.BSVersion, "1.23.0") && mod === "editor") && 
+                                !(window.electron.platform !== "linux" && mod === "proton_logs") &&
+                                !pinnedLaunchMods.includes(mod))
+                        }/>
                     <BsmButton
                         className="rounded-full w-fit text-lg py-1 px-7 bg-theme-2 text-gray-800 dark:text-white shadow-md shadow-black"
                         text="pages.version-viewer.launch-mods.advanced-launch.button"

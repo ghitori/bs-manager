@@ -110,6 +110,7 @@ export class BSLauncherService {
         if(params.desktopMode === "true"){ launchMods.push(LaunchMods.FPFC); }
         if(params.debug === "true"){ launchMods.push(LaunchMods.DEBUG); }
         if(params.skipSteam === "true"){ launchMods.push(LaunchMods.SKIP_STEAM); }
+        if(params.skipOculusClient === "true"){ launchMods.push(LaunchMods.SKIP_OCULUS_CLIENT); }
 
         const res: LaunchOption = {
             version: {
@@ -139,6 +140,7 @@ export class BSLauncherService {
         if(launchOptions.launchMods?.includes(LaunchMods.DEBUG)){ res.debug = "true"; }
         if(launchOptions.command){ res.command = launchOptions.command; }
         if(launchOptions.launchMods?.includes(LaunchMods.SKIP_STEAM)){ res.skipSteam = "true"; }
+        if(launchOptions.launchMods?.includes(LaunchMods.SKIP_OCULUS_CLIENT)){ res.skipOculusClient = "true"; }
         if(launchOptions.launchMods?.includes(LaunchMods.PROTON_LOGS)){ res.protonLogs = "true"; }
 
         return res;
@@ -285,6 +287,7 @@ type ShortcutParams = {
     debug?: string;
     command?: string;
     skipSteam?: string;
+    skipOculusClient?: string;
     protonLogs?: string;
     version: string;
     versionName?: string;

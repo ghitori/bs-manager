@@ -192,6 +192,160 @@ export class OculusService {
             });
         })
     }
+
+    public async isOVRServiceRunning(): Promise<boolean> {
+        if(process.platform !== "win32"){
+            log.info("Cannot check OVRService on non-windows platforms");
+            return false;
+        }
+    
+        return new Promise((resolve) => {
+            const process = exec(`sc query OVRService`);
+            let output = "";
+            
+            process.stdout?.on("data", data => {
+                output += data.toString();
+            });
+
+            process.on("exit", async code => {
+                if(code !== 0){
+                    log.info("OVRService query failed, trying with process check");
+                    const running = await isProcessRunning("OVRServer_x64");
+                    return resolve(running);
+                }
+                return resolve(output.includes("RUNNING"));
+            });
+        });
+    }
+
+    public async getOVRServicePermission(): Promise<string> {
+        if(process.platform !== "win32"){
+            throw new Error("Cannot get OVRService permission on non-windows platforms");
+        }
+
+        return new Promise((resolve, reject) => {
+            const process = exec(`sc sdshow "OVRService"`);
+            let output = "";
+            
+            process.stdout?.on("data", (data) => {
+                output += data.toString();
+            });
+
+            process.on("exit", code => {
+                if(code !== 0){
+                    return reject(new Error(`Failed to get OVRService SDDL, exit code: ${code}`));
+                }
+                return resolve(output.trim());
+            });
+
+            process.on("error", err => {
+                reject(new Error(`Error getting OVRService SDDL: ${err.message}`));
+            });
+        });
+    }
+
+    public async grantOVRServicePermission(): Promise<void> {
+        if(process.platform !== "win32"){
+            throw new Error("Cannot grant OVRService permission on non-windows platforms");
+        }
+    
+        const sid = await new Promise<string>((resolve, reject) => {
+            const process = exec(`powershell -Command "[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value"`);
+            let output = "";
+            
+            process.stdout?.on("data", (data) => {
+                output += data.toString();
+            });
+
+            process.on("exit", (code) => {
+                if(code !== 0 || !output.trim().startsWith("S-")){
+                    return reject(new Error(`Failed to get current user SID, exit code: ${code}`));
+                }
+                return resolve(output.trim());
+            });
+
+            process.on("error", err => {
+                reject(new Error(`Error getting user SID: ${err.message}`));
+            });
+        });
+
+        const sidPermission = `(A;;RPWP;;;${sid})`;
+        const sddl = await this.getOVRServicePermission();
+
+        if (sddl.includes(sidPermission)) {
+            log.info("Current user already has permission to OVRService");
+            return;
+        }
+
+        const newSddl = `${sddl}${sidPermission}`;
+
+        await new Promise<void>((resolve, reject) => {
+            const process = exec(`powershell -Command "Start-Process sc.exe -Verb RunAs -ArgumentList 'sdset','OVRService','${newSddl}' -Wait"`);
+            
+            process.on("exit", (code) => {
+                if(code !== 0){
+                    return reject(CustomError.fromError(new Error("UAC authorization is required"), BSLaunchError.GRANT_OVRSERVICE_PERMISSION_FAIL));
+                }
+                return resolve();
+            });
+        });
+
+        const updatedSddl = await this.getOVRServicePermission();
+        if (!updatedSddl.includes(sidPermission)) {
+            throw new Error("Failed to grant permission to OVRService");
+        }
+
+        log.info("Successfully granted permission to OVRService");
+    }
+
+    public async killOculusClient(): Promise<void> { //Kill Oculus client if you dont stop it last time.
+        for (let i = 0; i < 10; i++) {
+            await new Promise<void>((resolve) => {
+                setTimeout(() => {
+                    exec(`powershell -Command "Get-Process | Where-Object {$_.Path -like '*oculus-client\\Client.exe'} | Stop-Process -Force`);
+                    resolve();
+                }, 1000);
+            });
+        }
+    }
+
+    public async startOVRService(): Promise<void> {
+        if (await this.isOVRServiceRunning()) return;
+
+        log.info("OVRService is not running. Starting OVRService...");
+
+        return new Promise((resolve, reject) => {
+            const process = exec("sc start OVRService");
+
+            process.on("exit", async (code) => {
+                switch (code) {
+                    case 0:
+                        this.killOculusClient()
+                    case 1056:
+                        log.info("OVRService started successfully");
+                        resolve();
+                        break;
+                    case 5:
+                        log.warn("Failed to start OVRService, access denied");
+                        try {
+                            await this.grantOVRServicePermission();
+                            await this.startOVRService();
+                            resolve();
+                        } catch (err) {
+                            reject(err);
+                        }
+                        break;
+                    case 1060:
+                        log.error("OVRService is not installed");
+                        reject(CustomError.fromError(new Error("OVRService is not installed"), BSLaunchError.OCULUS_NOT_INSTALLED));
+                        break;
+                    default:
+                        log.error(`Failed to start OVRService, exit code: ${code}`);
+                        reject(CustomError.fromError(new Error("Failed to start OVRService"), BSLaunchError.OVRSERVICE_START_FAIL));
+                }
+            });
+        });
+    }
 }
 
 export interface OculusLibrary {

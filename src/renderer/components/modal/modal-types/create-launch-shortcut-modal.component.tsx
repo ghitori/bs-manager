@@ -59,6 +59,14 @@ export const CreateLaunchShortcutModal: ModalComponent<{ steamShortcut: boolean,
                         </Tippy>
                     </div>
                 )}
+                {data.oculus === true || data.metadata?.store === BsStore.OCULUS && (
+                    <div className="h-full flex justify-center items-center gap-2">
+                        <BsmCheckbox className="h-5 aspect-square relative z-[1]" checked={launchOption.launchMods.includes("skip_oculus_client")} onChange={e => toogleLaunchMod("skip_oculus_client", e)} />
+                        <Tippy className="!bg-main-color-1" content={t("pages.version-viewer.launch-mods.skipoculusclient-description")} delay={[300, 0]} arrow={false}>
+                            <span className="font-bold cursor-help">{t("pages.version-viewer.launch-mods.skipoculusclient")}</span>
+                        </Tippy>
+                    </div>
+                )}
                 <div className="h-full flex justify-center items-center gap-2">
                     <BsmCheckbox className="h-5 aspect-square relative z-[1]" checked={launchOption.launchMods.includes("fpfc")} onChange={e => toogleLaunchMod("fpfc", e)} />
                     <Tippy className="!bg-main-color-1" content={t("pages.version-viewer.launch-mods.desktop-description")} delay={[300, 0]} arrow={false}>

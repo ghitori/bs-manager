@@ -9,6 +9,7 @@ import { pathExists } from "fs-extra";
 import { AbstractLauncherService, buildBsLaunchArgs } from "./abstract-launcher.service";
 import { isProcessRunning } from "../../helpers/os.helpers";
 import { CustomError } from "../../../shared/models/exceptions/custom-error.class";
+import { LaunchMods } from "shared/models/bs-launch/launch-option.interface";
 import { parseLaunchOptions } from "main/helpers/launchOptions.helper";
 
 export class OculusLauncherService extends AbstractLauncherService implements StoreLauncherInterface {
@@ -47,10 +48,22 @@ export class OculusLauncherService extends AbstractLauncherService implements St
                     throw CustomError.fromError(new Error(`BS Path not exist ${bsPath}`), BSLaunchError.BS_NOT_FOUND);
                 }
 
-                // Make sure Oculus is running
-                await this.oculus.startOculus().catch(err => log.error("Error while starting Oculus", err)).catch(err => {
-                    log.warn("Unable to start Oculus client. Force launch.", err);
-                });
+                // Make sure Oculus or OVRService is running
+                const skipOculusClient: boolean = launchOptions.launchMods?.includes(LaunchMods.SKIP_OCULUS_CLIENT) ?? false;
+                if(skipOculusClient){
+                    await this.oculus.startOVRService().catch(err =>{
+                        if (err instanceof CustomError) throw err;
+
+                        throw new Error("Failed to start OVR Service");
+                    });
+                }else{
+                    await this.oculus.startOculus().catch(err => {
+                        if (err instanceof CustomError) throw err;
+                        
+                        log.error("Error while starting Oculus", err);
+                        log.warn("Unable to start Oculus client. Force launch.");
+                    });
+                }
 
                 let env: Record<string, string> = {
                     ...process.env,
