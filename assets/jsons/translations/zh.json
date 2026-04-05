@@ -189,11 +189,11 @@
             "dropdown": {
                 "open-folder": "打开文件夹",
                 "verify-files": "验证文件",
-                "clone": "Clone",
+                "clone": "复制",
                 "edit": "编辑",
                 "uninstall": "卸载",
                 "create-shortcut": "创建快捷方式",
-                "shared-folders": "Shared Folders"
+                "shared-folders": "共享文件夹"
             }
         },
         "available-versions": {
@@ -575,16 +575,16 @@
                     "CantEditSteam": "无法编辑",
                     "CantRename": "无法重命名",
                     "VersionAlreadExist": "该版本已存在",
-                    "CantClone": "无法克隆",
+                    "CantClone": "无法复制",
                     "UnknownError": "发生了未知错误"
                 },
                 "msg": {
-                    "CantEditSteam": "你不能编辑 Steam 版本。不过你可以克隆它。"
+                    "CantEditSteam": "你不能编辑 Steam 版本。不过你可以复制它。"
                 }
             },
             "success": {
                 "titles": {
-                    "CloningFinished": "克隆完成 🎉"
+                    "CloningFinished": "复制完成 🎉"
                 }
             }
         },
@@ -798,7 +798,7 @@
         },
         "bs-uninstall": {
             "title": "卸载",
-            "description": "你确定要卸载 Beat Saber {version} 吗？你将不得不重新下载它才能游玩。",
+            "description": "确定要卸载 Beat Saber {version} 吗？卸载后需要重新下载才能游玩。",
             "buttons": {
                 "submit": "卸载"
             }
@@ -817,8 +817,8 @@
             }
         },
         "clone-version": {
-            "title": "克隆版本",
-            "description": "克隆版本可以让你在两个版本之间分离附加的 BeatSaber 内容。",
+            "title": "复制版本",
+            "description": "复制版本可以让你在两个版本之间分离附加的 BeatSaber 内容。",
             "inputs": {
                 "name": {
                     "label": "名称",
@@ -829,7 +829,7 @@
                 }
             },
             "buttons": {
-                "submit": "克隆"
+                "submit": "复制"
             }
         },
         "uninstall-mod": {
